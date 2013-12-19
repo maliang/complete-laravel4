@@ -31,7 +31,7 @@ use Predis\Transaction\MultiExecContext;
  */
 class Client implements ClientInterface
 {
-    const VERSION = '0.8.5-dev';
+    const VERSION = '0.8.4';
 
     private $options;
     private $profile;
@@ -215,27 +215,34 @@ class Client implements ClientInterface
     }
 
     /**
-     * Creates a Redis command with the specified arguments and sends a request
-     * to the server.
+     * Dynamically invokes a Redis command with the specified arguments.
      *
-     * @param string $commandID Command ID.
-     * @param array $arguments Arguments for the command.
+     * @param string $method The name of a Redis command.
+     * @param array $arguments The arguments for the command.
      * @return mixed
      */
-    public function __call($commandID, $arguments)
+    public function __call($method, $arguments)
     {
-        $command = $this->createCommand($commandID, $arguments);
-        $response = $this->executeCommand($command);
+        $command = $this->profile->createCommand($method, $arguments);
+        $response = $this->connection->executeCommand($command);
 
-        return $response;
+        if ($response instanceof ResponseObjectInterface) {
+            if ($response instanceof ResponseErrorInterface) {
+                $response = $this->onResponseError($command, $response);
+            }
+
+            return $response;
+        }
+
+        return $command->parseResponse($response);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function createCommand($commandID, $arguments = array())
+    public function createCommand($method, $arguments = array())
     {
-        return $this->profile->createCommand($commandID, $arguments);
+        return $this->profile->createCommand($method, $arguments);
     }
 
     /**
@@ -362,26 +369,10 @@ class Client implements ClientInterface
      * Creates a new transaction context and returns it, or returns the results of
      * a transaction executed inside the optionally provided callable object.
      *
-     * @deprecated You should start using the new Client::transaction() method
-     *             as it will replace Client::multiExec() in the next major
-     *             version of the library.
-     *
      * @param mixed $arg,... Options for the context, a callable object, or both.
      * @return MultiExecContext|array
      */
     public function multiExec(/* arguments */)
-    {
-        return $this->sharedInitializer(func_get_args(), 'initMultiExec');
-    }
-
-    /**
-     * Creates a new transaction context and returns it, or returns the results of
-     * a transaction executed inside the optionally provided callable object.
-     *
-     * @param mixed $arg,... Options for the context, a callable object, or both.
-     * @return MultiExecContext|array
-     */
-    public function transaction(/* arguments */)
     {
         return $this->sharedInitializer(func_get_args(), 'initMultiExec');
     }
@@ -403,27 +394,10 @@ class Client implements ClientInterface
      * Creates a new Publish / Subscribe context and returns it, or executes it
      * inside the optionally provided callable object.
      *
-     * @deprecated This method will change in the next major release to support
-     *             the new PUBSUB command introduced in Redis 2.8. Please use
-     *             Client::pubSubLoop() to create Predis\PubSub\PubSubContext
-     *             instances from now on.
-     *
      * @param mixed $arg,... Options for the context, a callable object, or both.
-     * @return PubSubExecContext|array
+     * @return MultiExecContext|array
      */
     public function pubSub(/* arguments */)
-    {
-        return call_user_func_array(array($this, 'pubSubLoop'), func_get_args());
-    }
-
-    /**
-     * Creates a new Publish / Subscribe context and returns it, or executes it
-     * inside the optionally provided callable object.
-     *
-     * @param mixed $arg,... Options for the context, a callable object, or both.
-     * @return PubSubExecContext|array
-     */
-    public function pubSubLoop(/* arguments */)
     {
         return $this->sharedInitializer(func_get_args(), 'initPubSub');
     }

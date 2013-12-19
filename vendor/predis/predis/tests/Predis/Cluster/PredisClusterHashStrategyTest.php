@@ -319,7 +319,6 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'SUNIONSTORE'           => 'keys-all',
             'SISMEMBER'             => 'keys-first',
             'SMEMBERS'              => 'keys-first',
-            'SSCAN'                 => 'keys-first',
             'SPOP'                  => 'keys-first',
             'SRANDMEMBER'           => 'keys-first',
             'SREM'                  => 'keys-first',
@@ -341,7 +340,6 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'ZREVRANK'              => 'keys-first',
             'ZSCORE'                => 'keys-first',
             'ZUNIONSTORE'           => 'keys-zaggregated',
-            'ZSCAN'                 => 'keys-first',
 
             /* commands operating on hashes */
             'HDEL'                  => 'keys-first',
@@ -357,7 +355,6 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'HSET'                  => 'keys-first',
             'HSETNX'                => 'keys-first',
             'HVALS'                 => 'keys-first',
-            'HSCAN'                 => 'keys-first',
 
             /* scripting */
             'EVAL'                  => 'keys-script',

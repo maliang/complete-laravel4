@@ -114,7 +114,6 @@ class PredisClusterHashStrategy implements CommandHashStrategyInterface
             'SUNIONSTORE'           => $keysAreAllArguments,
             'SISMEMBER'             => $keyIsFirstArgument,
             'SMEMBERS'              => $keyIsFirstArgument,
-            'SSCAN'                 => $keyIsFirstArgument,
             'SPOP'                  => $keyIsFirstArgument,
             'SRANDMEMBER'           => $keyIsFirstArgument,
             'SREM'                  => $keyIsFirstArgument,
@@ -136,7 +135,6 @@ class PredisClusterHashStrategy implements CommandHashStrategyInterface
             'ZREVRANK'              => $keyIsFirstArgument,
             'ZSCORE'                => $keyIsFirstArgument,
             'ZUNIONSTORE'           => array($this, 'getKeyFromZsetAggregationCommands'),
-            'ZSCAN'                 => $keyIsFirstArgument,
 
             /* commands operating on hashes */
             'HDEL'                  => $keyIsFirstArgument,
@@ -152,7 +150,6 @@ class PredisClusterHashStrategy implements CommandHashStrategyInterface
             'HSET'                  => $keyIsFirstArgument,
             'HSETNX'                => $keyIsFirstArgument,
             'HVALS'                 => $keyIsFirstArgument,
-            'HSCAN'                 => $keyIsFirstArgument,
 
             /* scripting */
             'EVAL'                  => array($this, 'getKeyFromScriptingCommands'),

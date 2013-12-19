@@ -404,7 +404,7 @@ class ClientTest extends StandardTestCase
                 ->will($this->returnValue($ping));
 
         $options = array('profile' => $profile);
-        $client = $this->getMock('Predis\Client', null, array($connection, $options));
+        $client = $this->getMock('Predis\Client', array('createCommand'), array($connection, $options));
 
         $this->assertTrue($client->ping());
     }
@@ -521,7 +521,7 @@ class ClientTest extends StandardTestCase
     {
         $client = new Client();
 
-        $this->assertInstanceOf('Predis\Pipeline\PipelineContext', $client->pipeline());
+        $this->assertInstanceOf('Predis\Pipeline\PipelineContext', $pipeline = $client->pipeline());
     }
 
     /**
@@ -584,24 +584,24 @@ class ClientTest extends StandardTestCase
     /**
      * @group disconnected
      */
-    public function testPubSubLoopWithoutArgumentsReturnsPubSubContext()
+    public function testPubSubWithoutArgumentsReturnsPubSubContext()
     {
         $client = new Client();
 
-        $this->assertInstanceOf('Predis\PubSub\PubSubContext', $client->pubSubLoop());
+        $this->assertInstanceOf('Predis\PubSub\PubSubContext', $pubsub = $client->pubSub());
     }
 
     /**
      * @group disconnected
      */
-    public function testPubSubLoopWithArrayReturnsPubSubContextWithOptions()
+    public function testPubSubWithArrayReturnsPubSubContextWithOptions()
     {
         $connection = $this->getMock('Predis\Connection\SingleConnectionInterface');
         $options = array('subscribe' => 'channel');
 
         $client = new Client($connection);
 
-        $this->assertInstanceOf('Predis\PubSub\PubSubContext', $pubsub = $client->pubSubLoop($options));
+        $this->assertInstanceOf('Predis\PubSub\PubSubContext', $pubsub = $client->pubSub($options));
 
         $reflection = new \ReflectionProperty($pubsub, 'options');
         $reflection->setAccessible(true);
@@ -612,7 +612,7 @@ class ClientTest extends StandardTestCase
     /**
      * @group disconnected
      */
-    public function testPubSubLoopWithArrayAndCallableExecutesPubSub()
+    public function testPubSubWithArrayAndCallableExecutesPubSub()
     {
         // NOTE: we use a subscribe count of 0 in the fake message to trick
         //       the context and to make it think that it can be closed
@@ -631,17 +631,7 @@ class ClientTest extends StandardTestCase
                  ->method('__invoke');
 
         $client = new Client($connection);
-        $client->pubSubLoop($options, $callable);
-    }
-
-    /**
-     * @group disconnected
-     */
-    public function testPubSubIsAliasForPubSubLoop()
-    {
-        $client = new Client();
-
-        $this->assertInstanceOf('Predis\PubSub\PubSubContext', $client->pubSub());
+        $client->pubSub($options, $callable);
     }
 
     /**
@@ -651,17 +641,7 @@ class ClientTest extends StandardTestCase
     {
         $client = new Client();
 
-        $this->assertInstanceOf('Predis\Transaction\MultiExecContext', $client->multiExec());
-    }
-
-    /**
-     * @group disconnected
-     */
-    public function testMethodTransactionIsAliasForMethodMultiExec()
-    {
-        $client = new Client();
-
-        $this->assertInstanceOf('Predis\Transaction\MultiExecContext', $client->transaction());
+        $this->assertInstanceOf('Predis\Transaction\MultiExecContext', $pubsub = $client->multiExec());
     }
 
     /**

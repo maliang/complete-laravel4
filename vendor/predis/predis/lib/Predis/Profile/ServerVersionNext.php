@@ -16,14 +16,14 @@ namespace Predis\Profile;
  *
  * @author Daniele Alessandri <suppakilla@gmail.com>
  */
-class ServerVersionNext extends ServerVersion28
+class ServerVersionNext extends ServerVersion26
 {
     /**
      * {@inheritdoc}
      */
     public function getVersion()
     {
-        return '3.0';
+        return '2.8';
     }
 
     /**
