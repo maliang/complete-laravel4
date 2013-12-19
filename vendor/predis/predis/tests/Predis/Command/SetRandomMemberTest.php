@@ -40,8 +40,8 @@ class SetRandomMemberTest extends CommandTestCase
      */
     public function testFilterArguments()
     {
-        $arguments = array('key', 1);
-        $expected = array('key', 1);
+        $arguments = array('key');
+        $expected = array('key');
 
         $command = $this->getCommand();
         $command->setArguments($arguments);

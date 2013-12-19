@@ -15,7 +15,6 @@ namespace Predis\Command;
  * @link http://redis.io/commands/config-set
  * @link http://redis.io/commands/config-get
  * @link http://redis.io/commands/config-resetstat
- * @link http://redis.io/commands/config-rewrite
  * @author Daniele Alessandri <suppakilla@gmail.com>
  */
 class ServerConfig extends AbstractCommand

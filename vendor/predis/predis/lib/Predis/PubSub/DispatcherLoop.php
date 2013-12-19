@@ -33,7 +33,7 @@ class DispatcherLoop
     public function __construct(ClientInterface $client)
     {
         $this->callbacks = array();
-        $this->pubSubContext = $client->pubSubLoop();
+        $this->pubSubContext = $client->pubSub();
     }
 
     /**
