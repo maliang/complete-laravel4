@@ -14,12 +14,12 @@ namespace Predis\Profile;
 /**
  *
  */
-class ServerVersionNextTest extends ServerVersionTestCase
+class ServerVersionNextTest extends PredisProfileTestCase
 {
     /**
      * {@inheritdoc}
      */
-    public function getProfileInstance()
+    public function getProfile($version = null)
     {
         return new ServerVersionNext();
     }
@@ -29,7 +29,7 @@ class ServerVersionNextTest extends ServerVersionTestCase
      */
     public function getExpectedVersion()
     {
-        return '2.8';
+        return '3.0';
     }
 
     /**
@@ -173,6 +173,10 @@ class ServerVersionNextTest extends ServerVersionTestCase
             132 => 'evalsha',
             133 => 'script',
             134 => 'time',
+            135 => 'scan',
+            136 => 'sscan',
+            137 => 'zscan',
+            138 => 'hscan',
         );
     }
 }

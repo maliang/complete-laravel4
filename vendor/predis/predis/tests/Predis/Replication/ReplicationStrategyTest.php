@@ -11,15 +11,13 @@
 
 namespace Predis\Replication;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
-use Predis\Command\CommandInterface;
+use PredisTestCase;
 use Predis\Profile\ServerProfile;
 
 /**
  *
  */
-class ReplicationStrategyTest extends StandardTestCase
+class ReplicationStrategyTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -119,7 +117,6 @@ class ReplicationStrategyTest extends StandardTestCase
                 ->method('getId')
                 ->will($this->returnValue('CMDTEST'));
 
-
         $strategy->setCommandReadOnly('CMDTEST', true);
         $this->assertTrue($strategy->isReadOperation($command));
     }
@@ -135,7 +132,6 @@ class ReplicationStrategyTest extends StandardTestCase
         $command->expects($this->any())
                 ->method('getId')
                 ->will($this->returnValue('CMDTEST'));
-
 
         $strategy->setCommandReadOnly('CMDTEST', false);
         $this->assertFalse($strategy->isReadOperation($command));
@@ -236,14 +232,13 @@ class ReplicationStrategyTest extends StandardTestCase
     /**
      * Returns the list of expected supported commands.
      *
-     * @param string $type Optional type of command (based on its keys)
+     * @param  string $type Optional type of command (based on its keys)
      * @return array
      */
     protected function getExpectedCommands($type = null)
     {
         $commands = array(
             /* commands operating on the connection */
-            'EXISTS'                => 'read',
             'AUTH'                  => 'read',
             'SELECT'                => 'read',
             'ECHO'                  => 'read',
@@ -276,6 +271,7 @@ class ReplicationStrategyTest extends StandardTestCase
             'PTTL'                  => 'write',
             'SORT'                  => 'variable',
             'KEYS'                  => 'read',
+            'SCAN'                  => 'read',
             'RANDOMKEY'             => 'read',
 
             /* commands operating on string values */
@@ -321,8 +317,9 @@ class ReplicationStrategyTest extends StandardTestCase
             'SCARD'                 => 'read',
             'SISMEMBER'             => 'read',
             'SMEMBERS'              => 'read',
-            'SPOP'                  => 'write',
+            'SSCAN'                 => 'read',
             'SRANDMEMBER'           => 'read',
+            'SPOP'                  => 'write',
             'SREM'                  => 'write',
             'SINTER'                => 'read',
             'SUNION'                => 'read',
@@ -343,6 +340,7 @@ class ReplicationStrategyTest extends StandardTestCase
             'ZREVRANGEBYSCORE'      => 'read',
             'ZREVRANK'              => 'read',
             'ZSCORE'                => 'read',
+            'ZSCAN'                 => 'read',
 
             /* commands operating on hashes */
             'HDEL'                  => 'write',
@@ -357,6 +355,7 @@ class ReplicationStrategyTest extends StandardTestCase
             'HSET'                  => 'write',
             'HSETNX'                => 'write',
             'HVALS'                 => 'read',
+            'HSCAN'                 => 'read',
 
             /* scripting */
             'EVAL'                  => 'write',

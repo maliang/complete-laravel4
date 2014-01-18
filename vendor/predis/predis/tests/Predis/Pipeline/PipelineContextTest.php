@@ -11,8 +11,7 @@
 
 namespace Predis\Pipeline;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Client;
 use Predis\ClientException;
 use Predis\Profile\ServerProfile;
@@ -20,7 +19,7 @@ use Predis\Profile\ServerProfile;
 /**
  *
  */
-class PipelineContextTest extends StandardTestCase
+class PipelineContextTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -74,6 +73,20 @@ class PipelineContextTest extends StandardTestCase
         $this->assertSame($pipeline, $pipeline->echo('one'));
         $this->assertSame($pipeline, $pipeline->echo('one')->echo('two')->echo('three'));
     }
+
+    /**
+     * @group disconnected
+     */
+     public function testExecuteReturnsPipelineForFluentInterface()
+     {
+        $profile = ServerProfile::getDefault();
+        $connection = $this->getMock('Predis\Connection\SingleConnectionInterface');
+
+        $pipeline = new PipelineContext(new Client($connection));
+        $command = $profile->createCommand('echo', array('one'));
+
+        $this->assertSame($pipeline, $pipeline->executeCommand($command));
+     }
 
     /**
      * @group disconnected
@@ -240,6 +253,8 @@ class PipelineContextTest extends StandardTestCase
      */
     public function testExecuteWithCallableArgumentHandlesExceptions()
     {
+        $exception = null;
+
         $connection = $this->getMock('Predis\Connection\SingleConnectionInterface');
         $connection->expects($this->never())->method('writeCommand');
         $connection->expects($this->never())->method('readResponse');
@@ -255,8 +270,8 @@ class PipelineContextTest extends StandardTestCase
                 throw new ClientException('TEST');
                 $pipe->echo('two');
             });
-        } catch (\Exception $ex) {
-            $exception = $ex;
+        } catch (\Exception $exception) {
+            // NOOP
         }
 
         $this->assertInstanceOf('Predis\ClientException', $exception);
@@ -323,6 +338,8 @@ class PipelineContextTest extends StandardTestCase
      */
     public function testIntegrationWithClientExceptionInCallableBlock()
     {
+        $exception = null;
+
         $client = $this->getClient();
 
         try {
@@ -330,8 +347,8 @@ class PipelineContextTest extends StandardTestCase
                 $pipe->set('foo', 'bar');
                 throw new ClientException('TEST');
             });
-        } catch (\Exception $ex) {
-            $exception = $ex;
+        } catch (\Exception $exception) {
+            // NOOP
         }
 
         $this->assertInstanceOf('Predis\ClientException', $exception);
@@ -344,6 +361,8 @@ class PipelineContextTest extends StandardTestCase
      */
     public function testIntegrationWithServerExceptionInCallableBlock()
     {
+        $exception = null;
+
         $client = $this->getClient();
 
         try {
@@ -354,8 +373,8 @@ class PipelineContextTest extends StandardTestCase
                 $pipe->lpush('foo', 'bar');
                 $pipe->set('hoge', 'piyo');
             });
-        } catch (\Exception $ex) {
-            $exception = $ex;
+        } catch (\Exception $exception) {
+            // NOOP
         }
 
         $this->assertInstanceOf('Predis\ServerException', $exception);
@@ -389,29 +408,13 @@ class PipelineContextTest extends StandardTestCase
      * Returns a client instance connected to the specified Redis
      * server instance to perform integration tests.
      *
-     * @return array Additional connection parameters.
-     * @return array Additional client options.
-     * @return Client New client instance.
+     * @param  array  $parameters Additional connection parameters.
+     * @param  array  $options    Additional client options.
+     * @return Client
      */
-    protected function getClient(Array $parameters = array(), Array $options = array())
+    protected function getClient(array $parameters = array(), array $options = array())
     {
-        $parameters = array_merge(array(
-            'scheme' => 'tcp',
-            'host' => REDIS_SERVER_HOST,
-            'port' => REDIS_SERVER_PORT,
-            'database' => REDIS_SERVER_DBNUM,
-        ), $parameters);
-
-        $options = array_merge(array(
-            'profile' => REDIS_SERVER_VERSION,
-        ), $options);
-
-        $client = new Client($parameters, $options);
-
-        $client->connect();
-        $client->flushdb();
-
-        return $client;
+        return $this->createClient($parameters, $options);
     }
 
     /**

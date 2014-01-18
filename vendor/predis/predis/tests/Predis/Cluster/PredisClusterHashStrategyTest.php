@@ -11,15 +11,14 @@
 
 namespace Predis\Cluster;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Cluster\Distribution\HashRing;
 use Predis\Profile\ServerProfile;
 
 /**
  *
  */
-class PredisClusterHashStrategyTest extends StandardTestCase
+class PredisClusterHashStrategyTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -245,7 +244,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
     /**
      * Returns the list of expected supported commands.
      *
-     * @param string $type Optional type of command (based on its keys)
+     * @param  string $type Optional type of command (based on its keys)
      * @return array
      */
     protected function getExpectedCommands($type = null)
@@ -319,6 +318,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'SUNIONSTORE'           => 'keys-all',
             'SISMEMBER'             => 'keys-first',
             'SMEMBERS'              => 'keys-first',
+            'SSCAN'                 => 'keys-first',
             'SPOP'                  => 'keys-first',
             'SRANDMEMBER'           => 'keys-first',
             'SREM'                  => 'keys-first',
@@ -340,6 +340,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'ZREVRANK'              => 'keys-first',
             'ZSCORE'                => 'keys-first',
             'ZUNIONSTORE'           => 'keys-zaggregated',
+            'ZSCAN'                 => 'keys-first',
 
             /* commands operating on hashes */
             'HDEL'                  => 'keys-first',
@@ -355,6 +356,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'HSET'                  => 'keys-first',
             'HSETNX'                => 'keys-first',
             'HVALS'                 => 'keys-first',
+            'HSCAN'                 => 'keys-first',
 
             /* scripting */
             'EVAL'                  => 'keys-script',

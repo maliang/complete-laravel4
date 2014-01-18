@@ -11,14 +11,10 @@
 
 namespace Predis\Connection;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
-use Predis\Profile\ServerProfile;
-
 /**
  * @group ext-phpiredis
  */
-class PhpiredisConnectionTest extends ConnectionTestCase
+class PhpiredisConnectionTest extends PredisConnectionTestCase
 {
     /**
      * @group disconnected
@@ -89,6 +85,18 @@ class PhpiredisConnectionTest extends ConnectionTestCase
         $this->assertSame(3, $connection->executeCommand($cmdRpush));
         $this->assertSame(array('foo', 'hoge', 'lol'), $connection->executeCommand($cmdLrange));
     }
+
+     /**
+      * @group connected
+      * @expectedException Predis\Connection\ConnectionException
+      * @expectedExceptionMessage Cannot resolve the address of 'bogus.tld'.
+      */
+     public function testThrowsExceptionOnUnresolvableHostname()
+     {
+         $parameters = $this->getParameters(array('host' => 'bogus.tld'));
+         $connection = new PhpiredisConnection($parameters);
+         $connection->connect();
+     }
 
     /**
      * @group connected

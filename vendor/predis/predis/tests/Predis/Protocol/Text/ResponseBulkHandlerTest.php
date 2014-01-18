@@ -11,12 +11,12 @@
 
 namespace Predis\Protocol\Text;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
+use PredisTestCase;
 
 /**
  *
  */
-class ResponseBulkHandlerTest extends StandardTestCase
+class ResponseBulkHandlerTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -42,7 +42,7 @@ class ResponseBulkHandlerTest extends StandardTestCase
     public function testBulk()
     {
         $bulk = "This is a bulk string.";
-        $bulkLengh = (string) strlen($bulk);
+        $bulkLengh = strlen($bulk);
 
         $handler = new ResponseBulkHandler();
 
@@ -54,7 +54,7 @@ class ResponseBulkHandlerTest extends StandardTestCase
                    ->with($this->equalTo($bulkLengh + 2))
                    ->will($this->returnValue("$bulk\r\n"));
 
-        $this->assertSame($bulk, $handler->handle($connection, $bulkLengh));
+        $this->assertSame($bulk, $handler->handle($connection, (string) $bulkLengh));
     }
 
     /**

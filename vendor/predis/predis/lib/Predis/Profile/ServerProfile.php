@@ -41,7 +41,7 @@ abstract class ServerProfile implements ServerProfileInterface, CommandProcessin
      *
      * @return array
      */
-    protected abstract function getSupportedCommands();
+    abstract protected function getSupportedCommands();
 
     /**
      * Returns the default server profile.
@@ -77,6 +77,7 @@ abstract class ServerProfile implements ServerProfileInterface, CommandProcessin
             '2.2'     => 'Predis\Profile\ServerVersion22',
             '2.4'     => 'Predis\Profile\ServerVersion24',
             '2.6'     => 'Predis\Profile\ServerVersion26',
+            '2.8'     => 'Predis\Profile\ServerVersion28',
             'default' => 'Predis\Profile\ServerVersion26',
             'dev'     => 'Predis\Profile\ServerVersionNext',
         );
@@ -85,7 +86,7 @@ abstract class ServerProfile implements ServerProfileInterface, CommandProcessin
     /**
      * Registers a new server profile.
      *
-     * @param string $alias Profile version or alias.
+     * @param string $alias        Profile version or alias.
      * @param string $profileClass FQN of a class implementing Predis\Profile\ServerProfileInterface.
      */
     public static function define($alias, $profileClass)
@@ -106,7 +107,7 @@ abstract class ServerProfile implements ServerProfileInterface, CommandProcessin
     /**
      * Returns the specified server profile.
      *
-     * @param string $version Profile version or alias.
+     * @param  string                 $version Profile version or alias.
      * @return ServerProfileInterface
      */
     public static function get($version)
@@ -150,7 +151,7 @@ abstract class ServerProfile implements ServerProfileInterface, CommandProcessin
      * Returns the FQN of the class that represent the specified command ID
      * registered in the current server profile.
      *
-     * @param string $command Command ID.
+     * @param  string $command Command ID.
      * @return string
      */
     public function getCommandClass($command)
@@ -185,7 +186,7 @@ abstract class ServerProfile implements ServerProfileInterface, CommandProcessin
     /**
      * Defines a new commands in the server profile.
      *
-     * @param string $alias Command ID.
+     * @param string $alias   Command ID.
      * @param string $command FQN of a class implementing Predis\Command\CommandInterface.
      */
     public function defineCommand($alias, $command)
