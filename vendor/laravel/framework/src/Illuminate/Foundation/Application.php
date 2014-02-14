@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Events\EventServiceProvider;
 use Illuminate\Routing\RoutingServiceProvider;
 use Illuminate\Exception\ExceptionServiceProvider;
+use Illuminate\Config\FileEnvironmentVariablesLoader;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\TerminableInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -26,7 +27,7 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 	 *
 	 * @var string
 	 */
-	const VERSION = '4.1.18';
+	const VERSION = '4.1.21';
 
 	/**
 	 * Indicates if the application has "booted".
@@ -514,6 +515,20 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 	}
 
 	/**
+	 * Register a function for determining when to use array sessions.
+	 *
+	 * @param  \Closure  $callback
+	 * @return void
+	 */
+	public function useArraySessions(Closure $callback)
+	{
+		$this->bind('session.reject', function() use ($callback)
+		{
+			return $callback;
+		});
+	}
+
+	/**
 	 * Determine if the application has booted.
 	 *
 	 * @return bool
@@ -602,10 +617,12 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 	 */
 	protected function getStackedClient()
 	{
+		$sessionReject = $this->bound('session.reject') ? $this['session.reject'] : null;
+
 		$client = with(new \Stack\Builder)
 						->push('Illuminate\Cookie\Guard', $this['encrypter'])
 						->push('Illuminate\Cookie\Queue', $this['cookie'])
-						->push('Illuminate\Session\Middleware', $this['session']);
+						->push('Illuminate\Session\Middleware', $this['session'], $sessionReject);
 
 		$this->mergeCustomMiddlewares($client);
 
@@ -711,6 +728,11 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 			$response = $this['events']->until('illuminate.app.down');
 
 			if ( ! is_null($response)) return $this->prepareResponse($response, $request);
+		}
+
+		if ($this->runningUnitTests() && ! $this['session']->isStarted())
+		{
+			$this['session']->start();
 		}
 
 		return $this['router']->dispatch($this->prepareRequest($request));
@@ -915,6 +937,16 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 	}
 
 	/**
+	 * Get the environment variables loader instance.
+	 *
+	 * @return \Illuminate\Config\EnvironmentVariablesLoaderInterface
+	 */
+	public function getEnvironmentVariablesLoader()
+	{
+		return new FileEnvironmentVariablesLoader(new Filesystem, $this['path.base']);
+	}
+
+	/**
 	 * Get the service provider repository instance.
 	 *
 	 * @return \Illuminate\Foundation\ProviderRepository
@@ -924,31 +956,6 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 		$manifest = $this['config']['app.manifest'];
 
 		return new ProviderRepository(new Filesystem, $manifest);
-	}
-
-	/**
-	 * Get the current application locale.
-	 *
-	 * @return string
-	 */
-	public function getLocale()
-	{
-		return $this['config']->get('app.locale');
-	}
-
-	/**
-	 * Set the current application locale.
-	 *
-	 * @param  string  $locale
-	 * @return void
-	 */
-	public function setLocale($locale)
-	{
-		$this['config']->set('app.locale', $locale);
-
-		$this['translator']->setLocale($locale);
-
-		$this['events']->fire('locale.changed', array($locale));
 	}
 
 	/**
@@ -1012,6 +1019,31 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 	}
 
 	/**
+	 * Get the current application locale.
+	 *
+	 * @return string
+	 */
+	public function getLocale()
+	{
+		return $this['config']->get('app.locale');
+	}
+
+	/**
+	 * Set the current application locale.
+	 *
+	 * @param  string  $locale
+	 * @return void
+	 */
+	public function setLocale($locale)
+	{
+		$this['config']->set('app.locale', $locale);
+
+		$this['translator']->setLocale($locale);
+
+		$this['events']->fire('locale.changed', array($locale));
+	}
+
+	/**
 	 * Register the core class aliases in the container.
 	 *
 	 * @return void
@@ -1022,6 +1054,7 @@ class Application extends Container implements HttpKernelInterface, TerminableIn
 			'app'            => 'Illuminate\Foundation\Application',
 			'artisan'        => 'Illuminate\Console\Application',
 			'auth'           => 'Illuminate\Auth\AuthManager',
+			'auth.reminder.repository' => 'Illuminate\Auth\Reminders\ReminderRepositoryInterface',
 			'blade.compiler' => 'Illuminate\View\Compilers\BladeCompiler',
 			'cache'          => 'Illuminate\Cache\CacheManager',
 			'cache.store'    => 'Illuminate\Cache\Repository',
