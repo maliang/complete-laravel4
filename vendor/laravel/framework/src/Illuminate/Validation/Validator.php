@@ -581,7 +581,7 @@ class Validator implements MessageProviderInterface {
 
 		foreach ($attributes as $key)
 		{
-			if (isset($this->data[$key]) || isset($this->files[$key]))
+			if (array_get($this->data, $key) || array_get($this->files, $key))
 			{
 				$count++;
 			}
@@ -1647,7 +1647,14 @@ class Validator implements MessageProviderInterface {
 	 */
 	protected function replaceBefore($message, $attribute, $rule, $parameters)
 	{
-		return str_replace(':date', $parameters[0], $message);
+		if ( ! ($date = strtotime($parameters[0])))
+		{
+			return str_replace(':date', $this->getAttribute($parameters[0]), $message);
+		}
+		else
+		{
+			return str_replace(':date', $parameters[0], $message);
+		}
 	}
 
 	/**
@@ -1661,7 +1668,14 @@ class Validator implements MessageProviderInterface {
 	 */
 	protected function replaceAfter($message, $attribute, $rule, $parameters)
 	{
-		return str_replace(':date', $parameters[0], $message);
+		if ( ! ($date = strtotime($parameters[0])))
+		{
+			return str_replace(':date', $this->getAttribute($parameters[0]), $message);
+		}
+		else
+		{
+			return str_replace(':date', $parameters[0], $message);
+		}
 	}
 
 	/**

@@ -1,5 +1,4 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * SFTP Stream Wrapper
@@ -14,10 +13,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,23 +25,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * @category   Net
- * @package    Net_SFTP_Stream
- * @author     Jim Wigginton <terrafrost@php.net>
- * @copyright  MMXIII Jim Wigginton
- * @license    http://www.opensource.org/licenses/mit-license.html  MIT License
- * @link       http://phpseclib.sourceforge.net
+ * @category  Net
+ * @package   Net_SFTP_Stream
+ * @author    Jim Wigginton <terrafrost@php.net>
+ * @copyright MMXIII Jim Wigginton
+ * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
+ * @link      http://phpseclib.sourceforge.net
  */
 
 /**
  * SFTP Stream Wrapper
  *
+ * @package Net_SFTP_Stream
  * @author  Jim Wigginton <terrafrost@php.net>
  * @version 0.3.2
  * @access  public
- * @package Net_SFTP_Stream
  */
-class Net_SFTP_Stream {
+class Net_SFTP_Stream
+{
     /**
      * SFTP instances
      *
@@ -134,8 +134,12 @@ class Net_SFTP_Stream {
      */
     function Net_SFTP_Stream()
     {
+        if (defined('NET_SFTP_STREAM_LOGGING')) {
+            echo "__construct()\r\n";
+        }
+
         if (!class_exists('Net_SFTP')) {
-            require_once('Net/SFTP.php');
+            include_once 'Net/SFTP.php';
         }
     }
 
@@ -153,26 +157,30 @@ class Net_SFTP_Stream {
      */
     function _parse_path($path)
     {
-        extract(parse_url($path));
+        extract(parse_url($path) + array('port' => 22));
 
         if (!isset($host)) {
             return false;
         }
 
-        $context = stream_context_get_params($this->context);
-        if (isset($context['notification'])) {
-            $this->notification = $context['notification'];
+        if (isset($this->context)) {
+            $context = stream_context_get_params($this->context);
+            if (isset($context['notification'])) {
+                $this->notification = $context['notification'];
+            }
         }
 
         if ($host[0] == '$') {
             $host = substr($host, 1);
             global $$host;
-            if (!is_object($$host) || get_class($$host) != 'Net_sFTP') {
+            if (!is_object($$host) || get_class($$host) != 'Net_SFTP') {
                 return false;
             }
             $this->sftp = $$host;
         } else {
-            $context = stream_context_get_options($this->context);
+            if (isset($this->context)) {
+                $context = stream_context_get_options($this->context);
+            }
             if (isset($context['sftp']['session'])) {
                 $sftp = $context['sftp']['session'];
             }
@@ -201,7 +209,7 @@ class Net_SFTP_Stream {
             if (isset(self::$instances[$host][$port][$user][(string) $pass])) {
                 $this->sftp = self::$instances[$host][$port][$user][(string) $pass];
             } else {
-                $this->sftp = new Net_SFTP($host, isset($port) ? $port : 22);
+                $this->sftp = new Net_SFTP($host, $port);
                 if (isset($this->notification) && is_callable($this->notification)) {
                     /* if !is_callable($this->notification) we could do this:
 
@@ -252,6 +260,7 @@ class Net_SFTP_Stream {
 
         $this->size = $this->sftp->size($path);
         $this->mode = preg_replace('#[bt]$#', '', $mode);
+        $this->eof = false;
 
         if ($this->size === false) {
             if ($this->mode[0] == 'r') {
@@ -508,7 +517,7 @@ class Net_SFTP_Stream {
      * Open directory handle
      *
      * The only $options is "whether or not to enforce safe_mode (0x04)". Since safe mode was deprecated in 5.3 and
-     * removed in 5.4 I'm just going to ignore it 
+     * removed in 5.4 I'm just going to ignore it
      *
      * @param String $path
      * @param Integer $options
