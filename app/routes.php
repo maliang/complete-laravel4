@@ -1,5 +1,7 @@
 <?php
 
+
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -11,7 +13,8 @@
 |
 */
 
+
+    $eddard = new app\models\Edmure();
 Route::get('/', function()
 {
-	return View::make('hello');
 });
