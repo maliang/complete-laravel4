@@ -13,8 +13,7 @@
 |
 */
 
-
-    $eddard = new app\models\Edmure();
 Route::get('/', function()
 {
+    echo 'success!';
 });
