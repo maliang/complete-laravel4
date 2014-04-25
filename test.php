@@ -1,8 +1,3 @@
 <?php
-
-define("CDN1", 'xxxx');
-echo constant("CDN" . 1);
-
-
-
+var_dump(0 == '0');
 ?>
