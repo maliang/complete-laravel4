@@ -1,5 +1,7 @@
 <?php
 
+
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -10,8 +12,40 @@
 | and give it the Closure to execute when that URI is requested.
 |
 */
+Route::get('first', function()
+{
+    return Redirect::to('second');
+});
 
 Route::get('/', function()
 {
-	return View::make('hello');
+	return View::make('simple');
+});
+
+Route::get('my/page', function()
+{
+    return 'my page!';
+});
+
+
+Route::get('second', function()
+{
+    return 'second page!';
+});
+
+Route::get('/books', function()
+{
+	if (Auth::guest()) return Redirect::to('books/denny');
+});
+
+
+Route::get('/books/{genre?}', function($genre = null)
+{
+    if ($genre == null) return 'books index.';
+    return "books in the {$genre} category";
+});
+Route::get('/{squirrel}', function($squirrel)
+{
+	$data['squirrel'] = $squirrel;
+	return View::make('simple', $data);
 });
