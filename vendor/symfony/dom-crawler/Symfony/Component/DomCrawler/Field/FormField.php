@@ -19,7 +19,7 @@ namespace Symfony\Component\DomCrawler\Field;
 abstract class FormField
 {
     /**
-     * @var \DOMNode
+     * @var \DOMElement
      */
     protected $node;
     /**
@@ -39,16 +39,16 @@ abstract class FormField
      */
     protected $xpath;
     /**
-     * @var Boolean
+     * @var bool
      */
     protected $disabled;
 
     /**
      * Constructor.
      *
-     * @param \DOMNode $node The node associated with this field
+     * @param \DOMElement $node The node associated with this field
      */
-    public function __construct(\DOMNode $node)
+    public function __construct(\DOMElement $node)
     {
         $this->node = $node;
         $this->name = $node->getAttribute('name');
@@ -92,7 +92,7 @@ abstract class FormField
     /**
      * Returns true if the field should be included in the submitted values.
      *
-     * @return Boolean true if the field should be included in the submitted values, false otherwise
+     * @return bool    true if the field should be included in the submitted values, false otherwise
      */
     public function hasValue()
     {
@@ -102,7 +102,7 @@ abstract class FormField
     /**
      * Check if the current field is disabled
      *
-     * @return Boolean
+     * @return bool
      */
     public function isDisabled()
     {

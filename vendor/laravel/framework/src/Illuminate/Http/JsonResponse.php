@@ -1,9 +1,10 @@
 <?php namespace Illuminate\Http;
 
-use Symfony\Component\HttpFoundation\Cookie;
 use Illuminate\Support\Contracts\JsonableInterface;
 
 class JsonResponse extends \Symfony\Component\HttpFoundation\JsonResponse {
+
+	use ResponseTrait;
 
 	/**
 	 * The json encoding options.
@@ -32,14 +33,11 @@ class JsonResponse extends \Symfony\Component\HttpFoundation\JsonResponse {
 	 *
 	 * @param  bool $assoc
 	 * @param  int  $depth
-	 * @param  int  $options
 	 * @return mixed
 	 */
-	public function getData($assoc = false, $depth = 512, $options = null)
+	public function getData($assoc = false, $depth = 512)
 	{
-		$options = $options ?: $this->jsonOptions;
-
-		return json_decode($this->data, $assoc, $depth, $options);
+		return json_decode($this->data, $assoc, $depth);
 	}
 
 	/**
@@ -52,34 +50,6 @@ class JsonResponse extends \Symfony\Component\HttpFoundation\JsonResponse {
                                    : json_encode($data, $this->jsonOptions);
 
 		return $this->update();
-	}
-
-	/**
-	 * Set a header on the Response.
-	 *
-	 * @param  string  $key
-	 * @param  string  $value
-	 * @param  bool    $replace
-	 * @return \Illuminate\Http\Response
-	 */
-	public function header($key, $value, $replace = true)
-	{
-		$this->headers->set($key, $value, $replace);
-
-		return $this;
-	}
-
-	/**
-	 * Add a cookie to the response.
-	 *
-	 * @param  \Symfony\Component\HttpFoundation\Cookie  $cookie
-	 * @return \Illuminate\Http\Response
-	 */
-	public function withCookie(Cookie $cookie)
-	{
-		$this->headers->setCookie($cookie);
-
-		return $this;
 	}
 
 }

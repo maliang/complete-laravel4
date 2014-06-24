@@ -103,8 +103,17 @@ class ClassNotFoundFatalErrorHandler implements FatalErrorHandlerInterface
             }
 
             // get class loaders wrapped by DebugClassLoader
-            if ($function[0] instanceof DebugClassLoader && method_exists($function[0], 'getClassLoader')) {
-                $function[0] = $function[0]->getClassLoader();
+            if ($function[0] instanceof DebugClassLoader) {
+                $function = $function[0]->getClassLoader();
+
+                // Since 2.5, returning an object from DebugClassLoader::getClassLoader() is @deprecated
+                if (is_object($function)) {
+                    $function = array($function);
+                }
+
+                if (!is_array($function)) {
+                    continue;
+                }
             }
 
             if ($function[0] instanceof ComposerClassLoader || $function[0] instanceof SymfonyClassLoader) {
@@ -150,7 +159,7 @@ class ClassNotFoundFatalErrorHandler implements FatalErrorHandlerInterface
      */
     private function convertFileToClass($path, $file)
     {
-        $namespacedClass = str_replace(array($path.'/', '.php', '/'), array('', '', '\\'), $file);
+        $namespacedClass = str_replace(array($path.DIRECTORY_SEPARATOR, '.php', '/'), array('', '', '\\'), $file);
         $pearClass = str_replace('\\', '_', $namespacedClass);
 
         // We cannot use the autoloader here as most of them use require; but if the class
@@ -172,7 +181,7 @@ class ClassNotFoundFatalErrorHandler implements FatalErrorHandlerInterface
     /**
      * @param string $class
      *
-     * @return Boolean
+     * @return bool
      */
     private function classExists($class)
     {

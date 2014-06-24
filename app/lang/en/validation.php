@@ -27,13 +27,14 @@ return array(
 		"string"  => "The :attribute must be between :min and :max characters.",
 		"array"   => "The :attribute must have between :min and :max items.",
 	),
+	"boolean"              => "The :attribute field must be true or false",
 	"confirmed"            => "The :attribute confirmation does not match.",
 	"date"                 => "The :attribute is not a valid date.",
 	"date_format"          => "The :attribute does not match the format :format.",
 	"different"            => "The :attribute and :other must be different.",
 	"digits"               => "The :attribute must be :digits digits.",
 	"digits_between"       => "The :attribute must be between :min and :max digits.",
-	"email"                => "The :attribute format is invalid.",
+	"email"                => "The :attribute must be a valid email address.",
 	"exists"               => "The selected :attribute is invalid.",
 	"image"                => "The :attribute must be an image.",
 	"in"                   => "The selected :attribute is invalid.",
@@ -58,6 +59,7 @@ return array(
 	"required"             => "The :attribute field is required.",
 	"required_if"          => "The :attribute field is required when :other is :value.",
 	"required_with"        => "The :attribute field is required when :values is present.",
+	"required_with_all"    => "The :attribute field is required when :values is present.",
 	"required_without"     => "The :attribute field is required when :values is not present.",
 	"required_without_all" => "The :attribute field is required when none of :values are present.",
 	"same"                 => "The :attribute and :other must match.",
@@ -81,7 +83,11 @@ return array(
 	|
 	*/
 
-	'custom' => array(),
+	'custom' => array(
+		'attribute-name' => array(
+			'rule-name' => 'custom-message',
+		),
+	),
 
 	/*
 	|--------------------------------------------------------------------------

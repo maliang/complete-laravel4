@@ -21,15 +21,24 @@ class BeanstalkdQueue extends Queue implements QueueInterface {
 	protected $default;
 
 	/**
+	 * The "time to run" for all pushed jobs.
+	 *
+	 * @var int
+	 */
+	protected $timeToRun;
+
+	/**
 	 * Create a new Beanstalkd queue instance.
 	 *
 	 * @param  Pheanstalk  $pheanstalk
 	 * @param  string  $default
+	 * @param  int  $timeToRun
 	 * @return void
 	 */
-	public function __construct(Pheanstalk $pheanstalk, $default)
+	public function __construct(Pheanstalk $pheanstalk, $default, $timeToRun)
 	{
 		$this->default = $default;
+		$this->timeToRun = $timeToRun;
 		$this->pheanstalk = $pheanstalk;
 	}
 
@@ -56,7 +65,9 @@ class BeanstalkdQueue extends Queue implements QueueInterface {
 	 */
 	public function pushRaw($payload, $queue = null, array $options = array())
 	{
-		return $this->pheanstalk->useTube($this->getQueue($queue))->put($payload);
+		return $this->pheanstalk->useTube($this->getQueue($queue))->put(
+			$payload, Pheanstalk::DEFAULT_PRIORITY, Pheanstalk::DEFAULT_DELAY, $this->timeToRun
+		);
 	}
 
 	/**
@@ -74,7 +85,7 @@ class BeanstalkdQueue extends Queue implements QueueInterface {
 
 		$pheanstalk = $this->pheanstalk->useTube($this->getQueue($queue));
 
-		return $pheanstalk->put($payload, Pheanstalk::DEFAULT_PRIORITY, $this->getSeconds($delay));
+		return $pheanstalk->put($payload, Pheanstalk::DEFAULT_PRIORITY, $this->getSeconds($delay), $this->timeToRun);
 	}
 
 	/**
@@ -93,6 +104,18 @@ class BeanstalkdQueue extends Queue implements QueueInterface {
 		{
 			return new BeanstalkdJob($this->container, $this->pheanstalk, $job, $queue);
 		}
+	}
+
+	/**
+	 * Delete a message from the Beanstalk queue.
+	 *
+	 * @param  string  $queue
+	 * @param  string  $id
+	 * @return void
+	 */
+	public function deleteMessage($queue, $id)
+	{
+		$this->pheanstalk->useTube($this->getQueue($queue))->delete($id);
 	}
 
 	/**

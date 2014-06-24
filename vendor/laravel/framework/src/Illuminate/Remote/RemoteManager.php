@@ -13,13 +13,6 @@ class RemoteManager {
 	protected $app;
 
 	/**
-	 * The active connection instances.
-	 *
-	 * @var array
-	 */
-	protected $connections = array();
-
-	/**
 	 * Create a new remote manager instance.
 	 *
 	 * @param  \Illuminate\Foundation\Application  $app
@@ -91,12 +84,7 @@ class RemoteManager {
 	 */
 	public function resolve($name)
 	{
-		if ( ! isset($this->connections[$name]))
-		{
-			$this->connections[$name] = $this->makeConnection($name, $this->getConfig($name));
-		}
-
-		return $this->connections[$name];
+		return $this->makeConnection($name, $this->getConfig($name));
 	}
 
 	/**
@@ -140,7 +128,11 @@ class RemoteManager {
 	 */
 	protected function getAuth(array $config)
 	{
-		if (isset($config['key']) && trim($config['key']) != '')
+		if (isset($config['agent']) && $config['agent'] === true)
+		{
+			return array('agent' => true);
+		}
+		elseif (isset($config['key']) && trim($config['key']) != '')
 		{
 			return array('key' => $config['key'], 'keyphrase' => $config['keyphrase']);
 		}

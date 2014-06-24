@@ -1,6 +1,10 @@
 ## Laravel Framework (Kernel)
 
-[![Latest Stable Version](https://poser.pugx.org/laravel/framework/version.png)](https://packagist.org/packages/laravel/framework) [![Total Downloads](https://poser.pugx.org/laravel/framework/d/total.png)](https://packagist.org/packages/laravel/framework) [![Build Status](https://travis-ci.org/laravel/framework.png)](https://travis-ci.org/laravel/framework) [![Dependency Status](https://www.versioneye.com/php/laravel:framework/badge.png)](https://www.versioneye.com/php/laravel:framework)
+[![Build Status](https://travis-ci.org/laravel/framework.svg)](https://travis-ci.org/laravel/framework)
+[![Total Downloads](https://poser.pugx.org/laravel/framework/downloads.svg)](https://packagist.org/packages/laravel/framework)
+[![Latest Stable Version](https://poser.pugx.org/laravel/framework/v/stable.svg)](https://packagist.org/packages/laravel/framework)
+[![Latest Unstable Version](https://poser.pugx.org/laravel/framework/v/unstable.svg)](https://packagist.org/packages/laravel/framework)
+[![License](https://poser.pugx.org/laravel/framework/license.svg)](https://packagist.org/packages/laravel/framework)
 
 > **Note:** This repository contains the core code of the Laravel framework. If you want to build an application using Laravel 4, visit the main [Laravel repository](https://github.com/laravel/laravel).
 
@@ -18,7 +22,7 @@ Documentation for the entire framework can be found on the [Laravel website](htt
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework. If you are submitting a bug-fix, or an enhancement that is **not** a breaking change, submit your pull request to the branch corresponding to the latest stable release of the framework, such as the `4.1` branch. If you are submitting a breaking change or an entirely new component, submit your pull request to the `master` branch.
+Thank you for considering contributing to the Laravel framework. If you are submitting a bug-fix, or an enhancement that is **not** a breaking change, submit your pull request to the branch corresponding to the latest stable release of the framework, such as the `4.2` branch. If you are submitting a breaking change or an entirely new component, submit your pull request to the `master` branch.
 
 ### License
 

@@ -213,9 +213,7 @@ class Connection implements ConnectionInterface {
 	{
 		if ( ! is_null($callback)) return $callback;
 
-		$me = $this;
-
-		return function($line) use ($me) { $me->display($line); };
+		return function($line) { $this->display($line); };
 	}
 
 	/**
@@ -232,6 +230,8 @@ class Connection implements ConnectionInterface {
 	 * Get the gateway implementation.
 	 *
 	 * @return \Illuminate\Remote\GatewayInterface
+	 *
+	 * @throws \RuntimeException
 	 */
 	public function getGateway()
 	{

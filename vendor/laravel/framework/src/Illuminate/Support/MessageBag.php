@@ -1,11 +1,12 @@
 <?php namespace Illuminate\Support;
 
 use Countable;
+use JsonSerializable;
 use Illuminate\Support\Contracts\JsonableInterface;
 use Illuminate\Support\Contracts\ArrayableInterface;
 use Illuminate\Support\Contracts\MessageProviderInterface;
 
-class MessageBag implements ArrayableInterface, Countable, JsonableInterface, MessageProviderInterface {
+class MessageBag implements ArrayableInterface, Countable, JsonableInterface, MessageProviderInterface, JsonSerializable {
 
 	/**
 	 * All of the registered messages.
@@ -55,11 +56,16 @@ class MessageBag implements ArrayableInterface, Countable, JsonableInterface, Me
 	/**
 	 * Merge a new array of messages into the bag.
 	 *
-	 * @param  array  $messages
+	 * @param  \Illuminate\Support\Contracts\MessageProviderInterface|array  $messages
 	 * @return \Illuminate\Support\MessageBag
 	 */
-	public function merge(array $messages)
+	public function merge($messages)
 	{
+		if ($messages instanceof MessageProviderInterface)
+		{
+			$messages = $messages->getMessageBag()->getMessages();
+		}
+
 		$this->messages = array_merge_recursive($this->messages, $messages);
 
 		return $this;
@@ -252,7 +258,7 @@ class MessageBag implements ArrayableInterface, Countable, JsonableInterface, Me
 	 */
 	public function count()
 	{
-		return count($this->messages);
+		return count($this->messages, COUNT_RECURSIVE) - count($this->messages);
 	}
 
 	/**
@@ -263,6 +269,16 @@ class MessageBag implements ArrayableInterface, Countable, JsonableInterface, Me
 	public function toArray()
 	{
 		return $this->getMessages();
+	}
+
+	/**
+	 * Convert the object into something JSON serializable.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize()
+	{
+		return $this->toArray();
 	}
 
 	/**

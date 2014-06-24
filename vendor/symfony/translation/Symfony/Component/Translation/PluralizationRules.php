@@ -18,16 +18,15 @@ namespace Symfony\Component\Translation;
  */
 class PluralizationRules
 {
-    // @codeCoverageIgnoreStart
     private static $rules = array();
 
     /**
      * Returns the plural position to use for the given locale and number.
      *
-     * @param integer $number The number
+     * @param int     $number The number
      * @param string  $locale The locale
      *
-     * @return integer The plural position
+     * @return int     The plural position
      */
     public static function get($number, $locale)
     {
@@ -180,7 +179,7 @@ class PluralizationRules
                 return ($number == 1) ? 0 : ((($number == 0) || (($number % 100 > 0) && ($number % 100 < 20))) ? 1 : 2);
 
             case 'ar':
-                return ($number == 0) ? 0 : (($number == 1) ? 1 : (($number == 2) ? 2 : ((($number >= 3) && ($number <= 10)) ? 3 : ((($number >= 11) && ($number <= 99)) ? 4 : 5))));
+                return ($number == 0) ? 0 : (($number == 1) ? 1 : (($number == 2) ? 2 : ((($number % 100 >= 3) && ($number % 100 <= 10)) ? 3 : ((($number % 100 >= 11) && ($number % 100 <= 99)) ? 4 : 5))));
 
             default:
                 return 0;
@@ -212,6 +211,4 @@ class PluralizationRules
 
         self::$rules[$locale] = $rule;
     }
-
-    // @codeCoverageIgnoreEnd
 }

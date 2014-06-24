@@ -14,7 +14,7 @@ namespace Symfony\Component\DomCrawler;
 use Symfony\Component\CssSelector\CssSelector;
 
 /**
- * Crawler eases navigation of a list of \DOMNode objects.
+ * Crawler eases navigation of a list of \DOMElement objects.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  *
@@ -107,7 +107,7 @@ class Crawler extends \SplObjectStorage
 
         // DOM only for HTML/XML content
         if (!preg_match('/(x|ht)ml/i', $type, $xmlMatches)) {
-            return null;
+            return;
         }
 
         $charset = null;
@@ -118,8 +118,10 @@ class Crawler extends \SplObjectStorage
             }
         }
 
+        // http://www.w3.org/TR/encoding/#encodings
+        // http://www.w3.org/TR/REC-xml/#NT-EncName
         if (null === $charset &&
-            preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9]+)/i', $content, $matches)) {
+            preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9_:.]+)/i', $content, $matches)) {
             $charset = $matches[1];
         }
 
@@ -151,7 +153,7 @@ class Crawler extends \SplObjectStorage
      */
     public function addHtmlContent($content, $charset = 'UTF-8')
     {
-        $current = libxml_use_internal_errors(true);
+        $internalErrors = libxml_use_internal_errors(true);
         $disableEntities = libxml_disable_entity_loader(true);
 
         $dom = new \DOMDocument('1.0', $charset);
@@ -171,14 +173,16 @@ class Crawler extends \SplObjectStorage
             }
         }
 
-        @$dom->loadHTML($content);
+        if ('' !== trim($content)) {
+            @$dom->loadHTML($content);
+        }
 
-        libxml_use_internal_errors($current);
+        libxml_use_internal_errors($internalErrors);
         libxml_disable_entity_loader($disableEntities);
 
         $this->addDocument($dom);
 
-        $base = $this->filterXPath('descendant-or-self::base')->extract(array('href'));
+        $base = $this->filterRelativeXPath('descendant-or-self::base')->extract(array('href'));
 
         $baseHref = current($base);
         if (count($base) && !empty($baseHref)) {
@@ -215,14 +219,17 @@ class Crawler extends \SplObjectStorage
             $content = str_replace('xmlns', 'ns', $content);
         }
 
-        $current = libxml_use_internal_errors(true);
+        $internalErrors = libxml_use_internal_errors(true);
         $disableEntities = libxml_disable_entity_loader(true);
 
         $dom = new \DOMDocument('1.0', $charset);
         $dom->validateOnParse = true;
-        @$dom->loadXML($content, LIBXML_NONET);
 
-        libxml_use_internal_errors($current);
+        if ('' !== trim($content)) {
+            @$dom->loadXML($content, LIBXML_NONET);
+        }
+
+        libxml_use_internal_errors($internalErrors);
         libxml_disable_entity_loader($disableEntities);
 
         $this->addDocument($dom);
@@ -289,7 +296,7 @@ class Crawler extends \SplObjectStorage
     /**
      * Returns a node given its position in the node list.
      *
-     * @param integer $position The position
+     * @param int     $position The position
      *
      * @return Crawler A new instance of the Crawler with the selected node, or an empty Crawler if it does not exist.
      *
@@ -591,6 +598,11 @@ class Crawler extends \SplObjectStorage
     /**
      * Filters the list of nodes with an XPath expression.
      *
+     * The XPath expression is evaluated in the context of the crawler, which
+     * is considered as a fake parent of the elements inside it.
+     * This means that a child selector "div" or "./div" will match only
+     * the div elements of the current crawler, not their children.
+     *
      * @param string $xpath An XPath expression
      *
      * @return Crawler A new instance of Crawler with the filtered list of nodes
@@ -599,14 +611,14 @@ class Crawler extends \SplObjectStorage
      */
     public function filterXPath($xpath)
     {
-        $crawler = new static(null, $this->uri);
-        $prefixes = $this->findNamespacePrefixes($xpath);
-        foreach ($this as $node) {
-            $domxpath = $this->createDOMXPath($node->ownerDocument, $prefixes);
-            $crawler->add($domxpath->query($xpath, $node));
+        $xpath = $this->relativize($xpath);
+
+        // If we dropped all expressions in the XPath while preparing it, there would be no match
+        if ('' === $xpath) {
+            return new static(null, $this->uri);
         }
 
-        return $crawler;
+        return $this->filterRelativeXPath($xpath);
     }
 
     /**
@@ -625,12 +637,11 @@ class Crawler extends \SplObjectStorage
     public function filter($selector)
     {
         if (!class_exists('Symfony\\Component\\CssSelector\\CssSelector')) {
-            // @codeCoverageIgnoreStart
             throw new \RuntimeException('Unable to filter with a CSS selector as the Symfony CssSelector is not installed (you can use filterXPath instead).');
-            // @codeCoverageIgnoreEnd
         }
 
-        return $this->filterXPath(CssSelector::toXPath($selector));
+        // The CssSelector already prefixes the selector with descendant-or-self::
+        return $this->filterRelativeXPath(CssSelector::toXPath($selector));
     }
 
     /**
@@ -644,10 +655,10 @@ class Crawler extends \SplObjectStorage
      */
     public function selectLink($value)
     {
-        $xpath = sprintf('//a[contains(concat(\' \', normalize-space(string(.)), \' \'), %s)] ', static::xpathLiteral(' '.$value.' ')).
-                            sprintf('| //a/img[contains(concat(\' \', normalize-space(string(@alt)), \' \'), %s)]/ancestor::a', static::xpathLiteral(' '.$value.' '));
+        $xpath = sprintf('descendant-or-self::a[contains(concat(\' \', normalize-space(string(.)), \' \'), %s) ', static::xpathLiteral(' '.$value.' ')).
+                            sprintf('or ./img[contains(concat(\' \', normalize-space(string(@alt)), \' \'), %s)]]', static::xpathLiteral(' '.$value.' '));
 
-        return $this->filterXPath($xpath);
+        return $this->filterRelativeXPath($xpath);
     }
 
     /**
@@ -661,11 +672,12 @@ class Crawler extends \SplObjectStorage
      */
     public function selectButton($value)
     {
-        $xpath = sprintf('//input[((@type="submit" or @type="button") and contains(concat(\' \', normalize-space(string(@value)), \' \'), %s)) ', static::xpathLiteral(' '.$value.' ')).
-                         sprintf('or (@type="image" and contains(concat(\' \', normalize-space(string(@alt)), \' \'), %s)) or @id="%s" or @name="%s"] ', static::xpathLiteral(' '.$value.' '), $value, $value).
-                         sprintf('| //button[contains(concat(\' \', normalize-space(string(.)), \' \'), %s) or @id="%s" or @name="%s"]', static::xpathLiteral(' '.$value.' '), $value, $value);
+        $translate = 'translate(@type, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")';
+        $xpath = sprintf('descendant-or-self::input[((contains(%s, "submit") or contains(%s, "button")) and contains(concat(\' \', normalize-space(string(@value)), \' \'), %s)) ', $translate, $translate, static::xpathLiteral(' '.$value.' ')).
+                         sprintf('or (contains(%s, "image") and contains(concat(\' \', normalize-space(string(@alt)), \' \'), %s)) or @id="%s" or @name="%s"] ', $translate, static::xpathLiteral(' '.$value.' '), $value, $value).
+                         sprintf('| descendant-or-self::button[contains(concat(\' \', normalize-space(string(.)), \' \'), %s) or @id="%s" or @name="%s"]', static::xpathLiteral(' '.$value.' '), $value, $value);
 
-        return $this->filterXPath($xpath);
+        return $this->filterRelativeXPath($xpath);
     }
 
     /**
@@ -801,7 +813,93 @@ class Crawler extends \SplObjectStorage
     }
 
     /**
-     * @param integer $position
+     * Filters the list of nodes with an XPath expression.
+     *
+     * The XPath expression should already be processed to apply it in the context of each node.
+     *
+     * @param string $xpath
+     *
+     * @return Crawler
+     */
+    private function filterRelativeXPath($xpath)
+    {
+        $prefixes = $this->findNamespacePrefixes($xpath);
+
+        $crawler = new static(null, $this->uri);
+
+        foreach ($this as $node) {
+            $domxpath = $this->createDOMXPath($node->ownerDocument, $prefixes);
+            $crawler->add($domxpath->query($xpath, $node));
+        }
+
+        return $crawler;
+    }
+
+    /**
+     * Make the XPath relative to the current context.
+     *
+     * The returned XPath will match elements matching the XPath inside the current crawler
+     * when running in the context of a node of the crawler.
+     *
+     * @param string $xpath
+     *
+     * @return string
+     */
+    private function relativize($xpath)
+    {
+        $expressions = array();
+
+        $unionPattern = '/\|(?![^\[]*\])/';
+        // An expression which will never match to replace expressions which cannot match in the crawler
+        // We cannot simply drop
+        $nonMatchingExpression = 'a[name() = "b"]';
+
+        // Split any unions into individual expressions.
+        foreach (preg_split($unionPattern, $xpath) as $expression) {
+            $expression = trim($expression);
+            $parenthesis = '';
+
+            // If the union is inside some braces, we need to preserve the opening braces and apply
+            // the change only inside it.
+            if (preg_match('/^[\(\s*]+/', $expression, $matches)) {
+                $parenthesis = $matches[0];
+                $expression = substr($expression, strlen($parenthesis));
+            }
+
+            // BC for Symfony 2.4 and lower were elements were adding in a fake _root parent
+            if (0 === strpos($expression, '/_root/')) {
+                $expression = './'.substr($expression, 7);
+            }
+
+            // add prefix before absolute element selector
+            if (empty($expression)) {
+                $expression = $nonMatchingExpression;
+            } elseif (0 === strpos($expression, '//')) {
+                $expression = 'descendant-or-self::' . substr($expression, 2);
+            } elseif (0 === strpos($expression, './/')) {
+                $expression = 'descendant-or-self::' . substr($expression, 3);
+            } elseif (0 === strpos($expression, './')) {
+                $expression = 'self::' . substr($expression, 2);
+            } elseif ('/' === $expression[0]) {
+                // the only direct child in Symfony 2.4 and lower is _root, which is already handled previously
+                // so let's drop the expression entirely
+                $expression = $nonMatchingExpression;
+            } elseif ('.' === $expression[0]) {
+                // '.' is the fake root element in Symfony 2.4 and lower, which is excluded from results
+                $expression = $nonMatchingExpression;
+            } elseif (0 === strpos($expression, 'descendant::')) {
+                $expression = 'descendant-or-self::' . substr($expression, strlen('descendant::'));
+            } elseif (0 !== strpos($expression, 'descendant-or-self::')) {
+                $expression = 'self::' .$expression;
+            }
+            $expressions[] = $parenthesis.$expression;
+        }
+
+        return implode(' | ', $expressions);
+    }
+
+    /**
+     * @param int     $position
      *
      * @return \DOMElement|null
      */
@@ -811,11 +909,7 @@ class Crawler extends \SplObjectStorage
             if ($i == $position) {
                 return $node;
             }
-        // @codeCoverageIgnoreStart
         }
-
-        return null;
-        // @codeCoverageIgnoreEnd
     }
 
     /**

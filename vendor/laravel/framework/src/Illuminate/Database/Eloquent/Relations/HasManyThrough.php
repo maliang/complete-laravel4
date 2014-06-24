@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Collection;
 
 class HasManyThrough extends Relation {
@@ -71,9 +72,15 @@ class HasManyThrough extends Relation {
 	 */
 	public function getRelationCountQuery(Builder $query, Builder $parent)
 	{
+		$parentTable = $this->parent->getTable();
+
 		$this->setJoin($query);
 
-		return parent::getRelationCountQuery($query, $parent);
+		$query->select(new Expression('count(*)'));
+
+		$key = $this->wrap($parentTable.'.'.$this->firstKey);
+
+		return $query->where($this->getHasCompareKey(), '=', new Expression($key));
 	}
 
 	/**
@@ -109,7 +116,7 @@ class HasManyThrough extends Relation {
 	 *
 	 * @param  array   $models
 	 * @param  string  $relation
-	 * @return void
+	 * @return array
 	 */
 	public function initRelation(array $models, $relation)
 	{
@@ -236,7 +243,7 @@ class HasManyThrough extends Relation {
 	}
 
 	/**
-	 * Get the key for comparing against the pareny key in "has" query.
+	 * Get the key for comparing against the parent key in "has" query.
 	 *
 	 * @return string
 	 */

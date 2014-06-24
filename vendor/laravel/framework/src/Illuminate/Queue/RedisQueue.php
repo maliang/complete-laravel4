@@ -94,7 +94,7 @@ class RedisQueue extends Queue implements QueueInterface {
 	 *
 	 * @param  string  $queue
 	 * @param  string  $payload
-	 * @param  string  $delay
+	 * @param  int  $delay
 	 * @param  int  $attempts
 	 * @return void
 	 */
@@ -219,7 +219,7 @@ class RedisQueue extends Queue implements QueueInterface {
 	 */
 	protected function getRandomId()
 	{
-		return str_random(20);
+		return str_random(32);
 	}
 
 	/**

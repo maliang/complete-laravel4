@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Traits\MacroableTrait;
 use Illuminate\Http\Response as IlluminateResponse;
 use Illuminate\Support\Contracts\ArrayableInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -9,12 +10,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class Response {
 
-	/**
-	 * An array of registered Response macros.
-	 *
-	 * @var array
-	 */
-	protected static $macros = array();
+	use MacroableTrait;
 
 	/**
 	 * Return a new response from the application.
@@ -83,49 +79,19 @@ class Response {
 	 * @param  \SplFileInfo|string  $file
 	 * @param  string  $name
 	 * @param  array   $headers
+	 * @param  null|string  $disposition
 	 * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
 	 */
-	public static function download($file, $name = null, array $headers = array())
+	public static function download($file, $name = null, array $headers = array(), $disposition = 'attachment')
 	{
-		$response = new BinaryFileResponse($file, 200, $headers, true, 'attachment');
+		$response = new BinaryFileResponse($file, 200, $headers, true, $disposition);
 
 		if ( ! is_null($name))
 		{
-			return $response->setContentDisposition('attachment', $name, Str::ascii($name));
+			return $response->setContentDisposition($disposition, $name, Str::ascii($name));
 		}
 
 		return $response;
-	}
-
-	/**
-	 * Register a macro with the Response class.
-	 *
-	 * @param  string  $name
-	 * @param  callable  $callback
-	 * @return void
-	 */
-	public static function macro($name, $callback)
-	{
-		static::$macros[$name] = $callback;
-	}
-
-	/**
-	 * Handle dynamic calls into Response macros.
-	 *
-	 * @param  string  $method
-	 * @param  array  $parameters
-	 * @return mixed
-	 *
-	 * @throws \BadMethodCallException
-	 */
-	public static function __callStatic($method, $parameters)
-	{
-		if (isset(static::$macros[$method]))
-		{
-			return call_user_func_array(static::$macros[$method], $parameters);
-		}
-
-		throw new \BadMethodCallException("Call to undefined method $method");
 	}
 
 }

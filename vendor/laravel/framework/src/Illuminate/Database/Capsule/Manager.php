@@ -26,9 +26,16 @@ class Manager {
 	protected $manager;
 
 	/**
+	 * The container instance.
+	 *
+	 * @var \Illuminate\Container\Container
+	 */
+	protected $container;
+
+	/**
 	 * Create a new database capsule manager.
 	 *
-	 * @param  \Illuminate\Container\Container  $container
+	 * @param  \Illuminate\Container\Container|null  $container
 	 * @return void
 	 */
 	public function __construct(Container $container = null)
@@ -46,14 +53,17 @@ class Manager {
 	/**
 	 * Setup the IoC container instance.
 	 *
-	 * @param  \Illuminate\Container\Container  $container
+	 * @param  \Illuminate\Container\Container|null  $container
 	 * @return void
 	 */
 	protected function setupContainer($container)
 	{
 		$this->container = $container ?: new Container;
 
-		$this->container->instance('config', new Fluent);
+		if ( ! $this->container->bound('config'))
+		{
+			$this->container->instance('config', new Fluent);
+		}
 	}
 
 	/**
